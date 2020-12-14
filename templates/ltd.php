@@ -1,10 +1,10 @@
 <?php 
 get_header();?>
-    <!-- Swiper library -->
+ <!-- Swiper library -->
     <link href="https://cdn.jsdelivr.net/npm/swiper@5.3.6/css/swiper.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/swiper@5.3.6/js/swiper.min.js"></script>
     <!-- Vue library -->
-    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
     <!-- vue-awesome-swiper -->
     <script src="https://cdn.jsdelivr.net/npm/vue-awesome-swiper"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.0/axios.min.js"></script>
@@ -31,13 +31,8 @@ get_header();?>
                             <?php echo bdttMatchInfo();?>
                         </div>
                         <div class="single-post-body">
-                            <?php
-                                global $wp_query;
-                                $slug = $wp_query->get('pagename', '');
-
-                                $Sport = new BDTT_SPORT_CRAWL();
-                                $navData = $Sport->getNavData($slug);
-                                
+                            <?php $nav = createWeekDate();
+                            
                             ?>
                             <div id="app">
                                 <div class="slider-time-wrapper">
@@ -47,41 +42,42 @@ get_header();?>
                                             v-swiper:swiper="swiperOptions"
                                         >
                                             <div class="swiper-wrapper">
-                                                <div class="swiper-slide" v-for="(slide, index ) in sliders" :key="slide[0]">
-                                                    <div class="date">{{ slide[1] }}</div>
-                                                    <div class="day-of-week"> {{ slide[2] }}</div>
+                                                <div class="swiper-slide" v-for="slide in navs" :key="slide.date">
+                                                    <div class="date">{{ slide.name }}</div>
+                                                    <div class="day-of-week"> {{ slide.date }}</div>
                                                 </div>
                                             </div>
                                         </div>
                                     <div class="btn-next"><i class="icofont-rounded-right"></i></div>
                                 </div>
                                 <div id="result">
-                                    <template v-if="Object.keys(table).length">
-                                        <h3 v-if="Object.keys(table).length">{{ table.title }}</h3>
+                                    <template v-if="Object.keys(renderData).length">
+                                        <h3 v-if="title">{{ title }}</h3>
                                         <div class="load_data_round">
-                                            <div class="tbl-schedule-wrap active <?php echo $round;?>">
+                                            <div class="tbl-schedule-wrap active">
                                             
-                                                <table v-if="tableDate.length" class="table table-bordered tbl-schedule" v-for="(item, index) in tableDate">
+                                                <table v-if="Object.keys(results).length" class="table table-bordered tbl-schedule" v-for="(item, index) in Object.keys(results)">
                                                     <tbody>
                                                         
                                                         <tr>
                                                             <td class="tournament-name" colspan="4">{{ item }}</td>
                                                         </tr>
-                                                    
-                                                        <tr v-if="Object.keys(tableRes).length && tableRes[item]" v-for="row in tableRes[item]">
-                                                            <td width="10%" class="match-start-time"> <span>{{ row.time }}</span> </td>
-                                                            <td width="37.5%" class="team-home"> 
-                                                                <a :title="row.home" href="javascript:;">
-                                                                    {{ row.home }}
-                                                                </a>
-                                                                <img width="40" :src="handleImg(row.homeflag)" :alt="row.home">
-                                                            </td>
-                                                            <td width="15%" class="match-status">{{ row.vs }}</td>
-                                                            <td width="37.5%" class="team-away">
-                                                                <img width="40" :src="handleImg(row.awayflag)" :alt="row.away">
-                                                                <a :title="row.away" href="javascript:;">{{ row.away }}</a>
-                                                            </td>
-                                                        </tr>
+                                                        <template v-if="Object.keys(results).length && results[item]">
+                                                            <tr v-for="row in results[item]">
+                                                                <td width="10%" class="match-start-time"> <span>{{ row.time }}</span> </td>
+                                                                <td width="37.5%" class="team-home"> 
+                                                                    <a :title="row.home" href="javascript:;">
+                                                                        {{ row.home }}
+                                                                    </a>
+                                                                    <img width="40" :src="handleImg(row.homeflag)" :alt="row.home">
+                                                                </td>
+                                                                <td width="15%" class="match-status">{{ row.vs }}</td>
+                                                                <td width="37.5%" class="team-away">
+                                                                    <img width="40" :src="handleImg(row.awayflag)" :alt="row.away">
+                                                                    <a :title="row.away" href="javascript:;">{{ row.away }}</a>
+                                                                </td>
+                                                            </tr>
+                                                        </template>
                                                     </tbody>
                                                 </table>
                                             </div>
@@ -91,7 +87,7 @@ get_header();?>
                                         <p class="nodata">Dữ liệu đang được cập nhật!!!</p>
                                     </template>
                                 </div>
-                                <div class="loading" v-if="loading">
+                                <div class="loading" v-if="loadingMask">
                                     <div class="sk-chase">
                                         <div class="sk-chase-dot"></div>
                                         <div class="sk-chase-dot"></div>
@@ -110,16 +106,16 @@ get_header();?>
                                 const app = new Vue ({
                                     el: '#app',
                                     data: {
-                                        navData: <?php echo $navData;?>,
-                                        tableData: {},
-                                        table: {},
-                                        action: 'AjaxFootballResultByLeague',
+                                        navs: <?php echo json_encode($nav);?>,
+                                        dataByDate: [],
+                                        renderData: {},
                                         url: '<?php echo admin_url("admin-ajax.php");?>',
-                                        loading: false,
+                                        action: 'getScheduleResult',
+                                        loadingMask: false,
                                         swiperOptions: {
                                             // loop: true,
-                                            slideToClickedSlide: true,
                                             centeredSlides: true,
+                                            slideToClickedSlide: true,
                                             navigation: {
                                                 nextEl: '.btn-next',
                                                 prevEl: '.btn-prev'
@@ -127,114 +123,105 @@ get_header();?>
                                             observeParents: true,
                                             observer: true
                                         },
-                                        
                                     },
                                     computed: {
-                                        sliders() {
-                                            return this.navData.round.length ? this.navData.round : []
+                                        results() {
+                                            return this.renderData.res || {}
                                         },
-                                        leagueId () {
-                                            return this.navData.league_id
-                                        },
-                                        season () {
-                                            return this.navData.season
-                                        },
-                                        tableDate () {
-                                            if (this.table.res) {
-                                                return Object.keys(this.table.res);
-                                            }
-                                            return [];
-                                        },
-                                        tableRes () {
-                                            if (this.table.res) {
-                                                return this.table.res;
-                                            }
-                                            return {};
+                                        title () {
+                                            return this.renderData.title || ''
                                         }
                                     },
-                                    created() {
-                                        const active = this.activeSlide()
+                                    async created() {
+                                        const active = this.activeIndexSlide();
                                         this.swiperOptions.initialSlide = active;
-                                        roundId = this.activeRoundId();
-                                        if (this.sliders.length > 1) {
+
+                                        if (this.navs.length > 1) {
                                             this.swiperOptions.slidesPerView = 5;
                                         } else {
                                             this.swiperOptions.slidesPerView = 1;
-                                            this.swiperOptions.loop = true;
                                         }
-                                        this.getRoundData(roundId, this.leagueId, this.season);
+
+                                        const activeDate = this.activeDate();
+                                        await this.getResult(activeDate);
+
+
                                     },
                                     mounted() {
+                                        // console.log(this.swiper)
+                                        //console.log(this.navs)
                                         this.swiper.on('slideChange', async () => {
-                                            const realIndex = this.swiper.realIndex;
-                                            const roundId = this.getRoundId(realIndex);
-                                            
-                                            if (this.tableData[roundId] === undefined) {
-                                                this.getRoundData(roundId, this.leagueId, this.season);
+                                            const realIndex = this.swiper.realIndex
+                                            // console.log(realIndex)
+                                            const activeDate = this.navs[realIndex].date;
+                                            if (this.dataByDate[activeDate] === undefined) {
+                                                await this.getResult(activeDate);
                                             } else {
-                                                this.table = this.tableData[roundId]
+                                                this.renderData = this.dataByDate[activeDate];
                                             }
-                                            
                                         })
+                                        
                                     },
                                     methods: {
-                                        handleImg (url) {
-                                            if (url.startsWith('http')) {
-                                                return url;
-                                            }
-                                            return 'https://bongda24h.vn' + url;
-                                        },
-                                        activeSlide () {
+                                        // async onSwiperClickSlide (index, reallyIndex) {
+                                        //     this.swiper.slideTo(index)
+                                        //     const activeDate = this.navs[reallyIndex].date;
+                                        //     if (this.dataByDate[activeDate] === undefined) {
+                                        //         await this.getResult(activeDate);
+                                        //     } else {
+                                        //         this.renderData = this.dataByDate[activeDate];
+                                        //     }
+                                            
+                                        // },
+                                        activeIndexSlide() {
                                             let index = 0;
-                                            if (this.sliders.length) {
-                                                
-                                                for (let i = 0; i < this.sliders.length; i++) {
-                                                    if (this.sliders[i][3] !== '') {
-                                                        index = i;
-                                                        break;
-                                                    }
+                                            for( let i = 0; i < this.navs.length; i++) {
+                                                if (this.navs[i].name === 'Hôm nay') {
+                                                    index = i;
+                                                    break;
                                                 }
                                             }
                                             return index;
                                         },
-                                        activeRoundId () {
-                                            let roundId = 0;
-                                            if (this.sliders.length) {
-                                                
-                                                for (let i = 0; i < this.sliders.length; i++) {
-                                                    if (this.sliders[i][3] !== '') {
-                                                        roundId = this.sliders[i][3];
-                                                        break;
-                                                    }
+                                        activeDate() {
+                                            let date = '';
+                                            for( let i = 0; i < this.navs.length; i++) {
+                                                if (this.navs[i].name === 'Hôm nay') {
+                                                    date = this.navs[i].date;
+                                                    break;
                                                 }
                                             }
-                                            return roundId;
+                                            return date;
                                         },
-                                        getRoundId (index) {
-                                            return this.sliders[index][0];
-                                        },
-                                        getRoundData(roundId, leagueId, season) {
+                                        
+                                        getResult (dateD) {
                                             const data = new FormData();
-                                            data.append('roundId', roundId);
-                                            data.append('leagueId', leagueId);
-                                            data.append('sectionId', season);
+                                            data.append('date', dateD);
                                             data.append('action', this.action);
                                             const config = {
                                                 headers: {
                                                     'Content-Type': 'application/x-www-form-urlencoded'
                                                 }
                                             }
-                                            this.loading = true;
-                                            axios.post(this.url, data, config).then((res) => {
-                                                this.tableData[roundId] = res.data;
-                                                this.table = this.tableData[roundId];
-                                                this.loading = false;
+                                            this.loadingMask = true;
+                                            axios.post(this.url, data, config).then((resp) => {
+                                               
+                                                this.dataByDate[dateD] = resp.data;
+                                                this.renderData = this.dataByDate[dateD];
+                                                this.loadingMask = false;
+
                                             }).catch(err =>{
-                                                this.loading = false;
+                                                this.loadingMask = false;
                                                 console.log(err)
-                                                this.table = [];
+                                                this.renderData = {};
                                             })
-                                        }
+                                        },
+                                        handleImg (url) {
+                                            if (url.startsWith('http')) {
+                                                return url;
+                                            }
+                                            return 'https://bongda24h.vn' + url;
+                                        },
                                     }
 
                                 });

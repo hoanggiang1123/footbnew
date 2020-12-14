@@ -73,3 +73,19 @@ function getResultSchedule() {
     exit;
 }
 
+add_action('wp_ajax_nopriv_getScheduleResult', 'getScheduleResult');
+add_action('wp_ajax_getScheduleResult', 'getScheduleResult');
+
+function getScheduleResult() {
+    $date = isset($_POST['date']) ? $_POST['date'] : '';
+
+    if ($date === '') exit;
+    $url = 'https://bongda24h.vn/Schedules/AjaxSchedules?date=' .$date;
+
+    $Sport = new BDTT_SPORT_CRAWL();
+    $data = $Sport->parseResultScheduleHtml($url, 0);
+    
+    header('Content-Type: application/json');
+    echo json_encode($data);
+    exit;
+}

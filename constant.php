@@ -4,6 +4,11 @@ define('LTD_PRE', 'ltd');
 define('KQ_PRE', 'kqbd');
 define('BXH_PRE', 'bxh');
 
+define('GRAND', '/bong-da');
+define('PARENT_LTD', '/lich-thi-dau');
+define('PARENT_KQ', '/ket-qua');
+define('PARENT_BXH', '/bang-xep-hang');
+
 define('LTD_TEMPLATE', 'ket-qua.php');
 define('BXH_TEMPLATE', 'bang-xep-hang.php');
 
@@ -22,7 +27,7 @@ define('SERIE_A', 'serie-a');
 define('SERIE_B', 'serie-b');
 define('LIGUE_1', 'ligue-1');
 define('LIGUE_2', 'ligue-2');
-define('CHAMPION_LEAGUE', 'champion-league');
+define('CHAMPION_LEAGUE', 'champions-league');
 define('EUROPA_LEAGUE', 'europa-league');
 define('UEFA_NATION_LEAGUE', 'uefa-nation-league');
 define('WORLDCUP_QUALIFIED_CHAU_A', 'vong-loai-worldcup-chau-a');
@@ -458,5 +463,75 @@ $baseUrl = [
         'name' => 'Bảng xếp hạng vòng loại worldcup nam mỹ 2020',
         'id' => 83,
         'template' => BXH_TEMPLATE
+    ]
+];
+
+
+global $league_data;
+$league_data = [
+    [
+        'name' => 'Ngoại Hạng Anh',
+        'logo' => BDTT_PLUGIN_URL. 'img/17.png',
+        'slug' => 'ngoai-hang-anh/'
+    ],
+    [
+        'name' => 'La Liga',
+        'logo' => BDTT_PLUGIN_URL. 'img/8.png',
+        'slug' => 'laliga/'
+    ],
+    [
+        'name' => 'Serie A',
+        'logo' => BDTT_PLUGIN_URL. 'img/23.png',
+        'slug' => 'serie-a/'
+    ],
+    [
+        'name' => 'Bundesliga',
+        'logo' => BDTT_PLUGIN_URL. 'img/35.png',
+        'slug' => 'bundesliga/'
+    ],
+    [
+        'name' => 'Ligue 1',
+        'logo' => BDTT_PLUGIN_URL. 'img/34.png',
+        'slug' => 'ligue-1/'
+    ],
+    [
+        'name' => 'V-League',
+        'logo' => BDTT_PLUGIN_URL. 'img/626.png',
+        'slug' => 'v-league/'
+    ],
+    [
+        'name' => 'Champions League',
+        'logo' => BDTT_PLUGIN_URL. 'img/7.png',
+        'slug' => 'champions-league/'
+    ],
+    [
+        'name' => 'Europa League',
+        'logo' => BDTT_PLUGIN_URL. 'img/679.png',
+        'slug' => 'europa-league/'
+    ]
+    
+];
+global $mapType;
+$mapType = [
+    'result' => [
+        'name' => 'Kết quả',
+        'slug' => GRAND . PARENT_KQ .'/kqbd',
+        'sum' => 'Kết quả',
+        'id' => 'kq-tab',
+        'target' => 'kq'
+    ],
+    'schedule' => [
+        'name' => 'Lịch thi đấu',
+        'slug' => GRAND . PARENT_LTD .'/ltd',
+        'sum' => 'LTĐ',
+        'id' => 'ltd-tab',
+        'target' => 'ltd'
+    ],
+    'ranking' => [
+        'name' => 'Bảng xếp hạng',
+        'slug' => GRAND . PARENT_BXH .'/bxh',
+        'sum' => 'BXH',
+        'id' => 'bxh-tab',
+        'target' => 'bxh'
     ]
 ];

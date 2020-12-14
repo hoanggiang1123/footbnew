@@ -9,6 +9,27 @@ class BDTT_SPORT_CRAWL {
         require_once BDTT_PLUGIN_DIR . '/sport/simple_html_dom.php';
     }
 
+    public function getTyLeKeo() {
+        $data = [];
+
+        $ctx = stream_context_create(array('http'=>
+            array(
+                'timeout' => 5,  //1200 Seconds is 20 Minutes
+            )
+        ));
+
+        $content = file_get_contents($this->base_url, false, $ctx);
+
+        if ($content) {
+
+            $data = json_decode($content, true);
+
+            return $data;
+        }
+
+        return [];
+        
+    }
 
     public function getNavData ($slug) {
         $result = [];
@@ -726,6 +747,88 @@ class BDTT_SPORT_CRAWL {
         } else {
             $data = $this->createRankingData($base['url'],$base['id'], $file);
         }
+        return $data;
+    }
+
+    public function getAllRankingData() {
+        $result = [];
+        global $baseUrl;
+        $base = $baseUrl[$slug];
+
+        $file = 'bxh_all.txt';
+
+        $data = $this->getDataCache($file);
+
+        if($data !== '') {
+            $check = $this->checkDataCache(json_decode($data, true));
+
+            if($check === false) {
+                $data = $this->createAllRankingData($file);
+            } 
+        } else {
+            $data = $this->createAllRankingData($file);
+        }
+        return $data;
+    }
+
+    public function createAllRankingData ($file) {
+        $data = $this->parseAllRankingData();
+        $content = json_encode($data);
+        $this->saveCache($file, $content);
+        return $content;
+
+    }
+    public function parseAllRankingData() {
+        $html = $this->getHtml('https://bongda24h.vn/bang-xep-hang.html');
+        $result = [];
+        if ($html->find('.content-right .section .section-content', 0)) {
+            if ($html->find('.content-right .section .section-content', 0) ->find('.box-bxh')) {
+                $items = $html->find('.content-right .section .section-content', 0)->find('.box-bxh');
+                if ($items && count($items) > 0) {
+                    for ($i = 0; $i < 7; $i++) {
+                        $item = $items[$i];
+                        $key = $item->find('h2.title-giaidau', 0)->text();
+                        if ($item->find('.table-content.calc .table-bxh', 0)) {
+                            $subitems = $item->find('.table-content.calc .table-bxh', 0)->find('tr');
+
+                            if ($subitems && count($subitems) > 0) {
+                                for ($j = 1; $j < count($subitems); $j++) {
+                                    $sub = $subitems[$j];
+                                    $stt = $sub->find('td', 0) ?  $sub->find('td', 0)->text() : '';
+                                    $flag = $sub->find('td', 1)->find('.link-clb img.bxhclb-icon', 0) ?  $sub->find('td', 1)->find('.link-clb img.bxhclb-icon', 0)->getAttribute('src') : '';
+                                    $name = $sub->find('td', 1) ?  $sub->find('td', 1)->text() : '';
+                                    $match = $sub->find('td', 2) ?  $sub->find('td', 2)->text() : '';
+                                    $win = $sub->find('td', 3) ?  $sub->find('td', 3)->text() : '';
+                                    $draw = $sub->find('td', 4) ?  $sub->find('td', 4)->text() : '';
+                                    $loss = $sub->find('td', 5) ?  $sub->find('td', 5)->text() : '';
+                                    $hs = $sub->find('td', 6) ?  $sub->find('td', 6)->text() : '';
+                                    $point = $sub->find('td', 7) ?  $sub->find('td', 7)->text() : '';
+                                    $result[$key][] = [
+                                        'stt' => $stt,
+                                        'flag' => $flag,
+                                        'name' => $name,
+                                        'match' => $match,
+                                        'win' => $win,
+                                        'draw' => $draw,
+                                        'loss' => $loss,
+                                        'hs' => $hs,
+                                        'point' => $point
+                                    ];
+                                }
+                            }
+                        }
+                         
+                    }
+                }
+            }
+        }
+
+        $data = [];
+        if (count($result) > 0) {
+            $data['res'] = $result;
+            $data['cache'] = time() + 18000;
+        }
+        
         return $data;
     }
 }
